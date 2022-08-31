@@ -23,7 +23,7 @@ var
 {----------------------Funciones y procedimientos----------------------}
 
 //Crear Base de datos
-procedure crearBaseDeDatos(var archivo:text);
+procedure crearBaseDeDatos();
 var
 	NombreArchivo: string;
 	meta_size_str: String[META_COUNT_SIZE];
@@ -78,19 +78,50 @@ begin
 end;
 
 //Abrir Base de Datos
-procedure abrirBaseDeDatos(var archivo);
+procedure abrirBaseDeDatos();
+var
+	NombreArchivo: string;
+	meta_size_str: String[META_COUNT_SIZE];
+	meta_size: integer;
+	i: integer;
+	s: string;
 begin
-
+	clrscr;
+	{Solicita al usuario que ingrese el nombre del archivo de texto}
+	write('Ingrese el nombre del archivo: ');
+	readln(NombreArchivo);
+	Assign(archivo, NombreArchivo);
+	reset(archivo);
+	
+	{Lee la primera linea del archivo y se guarda el valor que indica
+	* la cantidad de campos de la metadata}
+	readln(archivo, meta_size_str);
+	meta_size_str:= Trim(meta_size_str);
+	meta_size:= StrToInt(meta_size_str);
+	setLength(meta_data, meta_size);
+	
+	i:= 0;
+	
+	
 end;
 
 //Lee el archivo y lo muestra por pantalla
-{procedure leerArchivo(var archivo:text);
+{procedure leerArchivo(var archivo:text; NombreArchivo:string);
+var
+	i: integer;
 begin
 	reset(archivo);
-	while not eof(archivo) do
+	write('Cantidad de campos: ');
+	writeln(meta_size);
+	writeln('');
+	
+	i:= 0;
+	while (i < meta_size) do
 		begin
-			readln(archivo, s);
-			writeln(s);
+			writeln(i);
+			writeln(meta_data[i].name);
+			writeln(meta_data[i].size);
+			inc(i);
 		end;
 	Close(archivo);
 	readkey;
@@ -121,8 +152,8 @@ begin
 		until opcion in ['0'..'5'];
 		clrscr;
 		case opcion of
-			'1':crearBaseDeDatos(archivo);
-			'2':abrirBaseDeDatos(archivo);
+			'1':crearBaseDeDatos();
+			'2':abrirBaseDeDatos();
 			'3':;
 			'4':;
 			'5':;
