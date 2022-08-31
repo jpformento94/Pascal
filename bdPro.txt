@@ -1,4 +1,0 @@
-3 
-apellido                        10  
-nombre                          10  
-legajo                          6   
