@@ -1,71 +1,80 @@
-program ReadFile;
+program BaseDeDatos;
 
 uses
-	crt, Sysutils;
+	crt, Sysutils, strutils;
 
 const
-	META_COUNT_SIZA = 2;
-	META_NAME_SIZE = 32;
-	META_SIZE_SIZE = 4;
+	META_COUNT_SIZE = 2;	//Tamaño del campo que cuenta la cantidad de campos [00..99]
+	META_NAME_SIZE = 32;	//Tamaño del nombre del campo [32 caracteres]
+	META_SIZE_SIZE = 4;		//Tamaño del campo nombre [0000..9999]
 
 type
 	Meta = record
 		name: String[META_NAME_SIZE];
 		size: String[META_SIZE_SIZE];
-	end.
+	end;
 
 	MetaData = array of Meta;
 	
 var
   archivo: text;
-  s: string;
-
+  meta_data: MetaData;
+  
 {----------------------Funciones y procedimientos----------------------}
 
 //Crear Base de datos
 procedure crearBaseDeDatos(var archivo:text);
 var
-	c: string;
+	NombreArchivo: string;
+	meta_size_str: String[META_COUNT_SIZE];
+	meta_size: integer;
+	i: integer;
+	s: string;
 begin
-	writeln('Esta seguro que desea crear un archivo nuevo?');
-	textcolor(12);
-	writeln('Cualquier archivo existente sera destruido');
-	textcolor(15);
-	writeln('Ingrese S/N');
-	readln(c);
-	if (c = 's') or (c = 'S') then
+	clrscr;
+	
+	write('Nombre de la Base de Datos: ');		
+	readln(NombreArchivo);
+	writeln('');		
+	
+	{Guarda la cantidad campos que se van a utilizar en los metadatos}		
+	write('Ingrese la cantidad de campos [1-99]: ');
+	readln(meta_size_str);
+	meta_size_str:= Trim(meta_size_str);
+	meta_size:= StrToInt(meta_size_str);
+	setLength(meta_data, meta_size);
+	
+	i:= 0;
+	{Bucle que pide el nombre del campo y la cantidad de caracteres que ocupa y
+	 los carga en el arreglo meta_data}	
+	while (i < meta_size) do
 		begin
-			clrscr;
-			rewrite(archivo);
-			
-			writeln('Ingrese la cantidad de campos [1-99]');
-			readln(c);
-			if (Length(c) < 2) then
-				c:= '0' + c;
-			writeln(archivo,c);
-			
-			writeln('Ingrese el nombre del campos');
-			readln(c);
-			while (Length(c) < 32) do
-				c:= c + ' ';
-			write(archivo,c);
-			
-			writeln('Ingrese cantidad de caracteres del campo');
-			readln(c);
-			agregarCeros(c);
-			write(archivo,c);
-			
-			close(archivo);
-			writeln('Archivo creado exitosamente');
-			readkey;
-		end
-	else
-		begin
-			clrscr;
-			textcolor(12);
-			writeln('Cancelado, se regresara al menu');
-			readkey;
+			write('Ingrese el nombre del campo: ');
+			readln(s);
+			meta_data[i].name:= s;
+			writeln('');
+			write('Longitud del campo: ');
+			readln(s);
+			meta_data[i].size:= s;
+			writeln('');
+			inc(i);
 		end;
+		
+		{Creo el archivo con el nombre que ingreso el usuario}
+		Assign(archivo, NombreArchivo);
+		rewrite(archivo);
+		writeln(archivo, PadRight(meta_size_str, META_COUNT_SIZE));
+		
+		i:= 0;
+		{Bucle que pasa los datos del array al archivo y
+		* los formatea como se declaro en la metadata}
+		while (i < meta_size) do
+			begin
+				write(archivo, PadRight(meta_data[i].name, META_NAME_SIZE));
+				writeln(archivo, PadRight(meta_data[i].size, META_SIZE_SIZE));
+				inc(i);
+			end;
+		close(archivo);
 end;
 
 //Abrir Base de Datos
@@ -75,7 +84,7 @@ begin
 end;
 
 //Lee el archivo y lo muestra por pantalla
-procedure leerArchivo(var archivo:text);
+{procedure leerArchivo(var archivo:text);
 begin
 	reset(archivo);
 	while not eof(archivo) do
@@ -85,7 +94,7 @@ begin
 		end;
 	Close(archivo);
 	readkey;
-end;
+end;}
 
 //Menu principal
 procedure menu(var archivo:text);
@@ -96,7 +105,7 @@ begin
 		clrscr;
 		textcolor(14);
 		gotoxy(2,1);writeln('==Menu Principal==');
-		textcolor(10);
+		textcolor(15);
 		gotoxy(2,3);writeln('1- Crear Base de datos');
 		gotoxy(2,5);writeln('2- Abrir Base de datos');
 		gotoxy(2,7);writeln('3- Alta');
@@ -122,7 +131,6 @@ begin
 end;	
 
 BEGIN
-	assign(archivo,'db.txt');
+	setLength(meta_data,0);
 	menu(archivo);
-	TextColor(NormVideo);
 END.
