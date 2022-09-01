@@ -1,7 +1,5 @@
-03
-Apellido                        0010
-Nombre                          0010
-Legajo                          0006
-Perez    Juan       4125
-Suarez   Enrique Jo 1385
-Gomez    Juana      128 formento  juan pablo136813
+3 
+apellido                        10  
+nombre                          10  
+legajo                          6   
+perez     juan      123456garmendia camilo    123562formento  juan pablo136813

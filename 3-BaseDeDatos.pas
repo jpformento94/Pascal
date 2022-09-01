@@ -130,24 +130,61 @@ begin
 	readln;
 end;
 
+{-----------------Procedimiento que muestra los registros cargados en el archivo-----------------}
+procedure mostrar();
+var
+	s: string;
+	i, j: integer;
+begin
+	reset(archivo);
+	i:= 0;
+	j:= 11;
+	s:= '';
+	{Muestra el nombre de las columnas}
+	textcolor(10);
+	while (i < meta_size) do
+		begin
+			write(meta_data[i].name);
+			gotoxy(i + j, 1);
+			j:= j + 9;
+			inc(i);
+		end;
+	writeln('');
+	{Muestra el contenido del archivo}
+	i:= 0;
+	textcolor(15);
+	while not eof(archivo) do
+		begin
+			if (i > meta_size) then
+				begin
+					readln(archivo,s);
+					writeln(s);
+				end
+			else
+				begin
+					readln(archivo,s);
+				end;
+			inc(i);
+		end;
+	readln();
+end;
+
+
 {-----------------Procedimiento que agrega un registro al archivo-----------------}
 procedure alta();
 var
 	s: string;
 	i, size: integer;
 begin
-	assign(archivo, NombreArchivo);
 	append(archivo);
 	writeln('Nombre de la base de datos: ' + NombreArchivo);
 	writeln('');
 	i:= 0;
-	{Agrega un enter al archivo}
-	write(archivo, char (13));
 	while i < meta_size do
 		begin
 			writeln('Ingrese ' + meta_data[i].name);
 			readln(s);
-			size:= StrToInt(meta_data[i].size);
+			size:= StrToInt(Trim(meta_data[i].size));
 			{Si el texto ingresado es mayor al declarado en la meta data
 			* lo recorta hasta el maximo de la metadata}
 			if (Length(s) > size) then
@@ -162,6 +199,8 @@ begin
 				end;
 			inc(i);
 		end;
+	{Agrega un enter al archivo}
+	write(archivo, char (13));
 	close(archivo);
 	readln;
 end;
@@ -194,7 +233,7 @@ begin
 		case opcion of
 			'1':crearBaseDeDatos();
 			'2':abrirBaseDeDatos();
-			'3':;
+			'3':mostrar();
 			'4':alta();
 			'5':;
 			'6':;
