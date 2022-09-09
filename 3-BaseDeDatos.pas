@@ -229,7 +229,7 @@ begin
 	reset(archivo);
 	assign(archivoaux, 'auxiliar.txt');
 	rewrite(archivoaux);
-	writeln('Indice que la posicion que desea borrar');
+	writeln('Indique la posicion que desea borrar');
 	{esta es la posicion que ve el usuario}
 	readln(pos_eliminar);
 	
@@ -300,7 +300,7 @@ begin
 	reset(archivo);
 	assign(archivoaux, 'auxiliar.txt');
 	rewrite(archivoaux);
-	writeln('Indice que la posicion que desea modificar');
+	writeln('Indique la posicion que desea modificar');
 	{esta es la posicion que ve el usuario}
 	readln(pos_modificar);
 	
