@@ -134,7 +134,7 @@ end;
 procedure mostrar();
 var
 	s: string;
-	i, j,p : integer;
+	i, j, p : integer;
 begin
 	reset(archivo);
 	i:= 0;
@@ -265,7 +265,6 @@ begin
 				begin
 					readln(archivo, s);
 					writeln(archivoaux, s);
-					
 				end;
 			close(archivo);
 			erase(archivo);
