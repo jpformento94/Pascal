@@ -74,6 +74,61 @@ begin
 	readkey;
 end;
 
+{-----------------Procedimiento que borra un registro del archivo-----------------}
+procedure baja();
+var 
+	cliente: TipoCliente;
+	pos: integer;
+	opcion: char;
+begin
+	clrscr;
+	write('Ingrese la posicion del cliente que desea dar de baja: ');
+	readln(pos);
+	while (pos <= 0) or (pos > 9999) do 
+		begin
+			writeln;
+			TextColor(red);
+			write('Error, reingrese el nunero de cliente: ');
+			TextColor(15);
+			readln(pos);
+		end;
+	clrscr;	
+	reset(a);
+	if (filesize(a) >= pos) then
+		begin
+			seek(a, pos - 1);
+			read(a, cliente);
+			if (cliente.estado = true)then
+				begin
+					write('Borrar a ');
+					write(cliente.apellido);
+					write(' ');
+					write(cliente.nombre);
+					write(' ');
+					write(cliente.numero);
+					write(' ? (S/N)');
+					readln(opcion);
+					if (opcion = 's') or (opcion = 'S') then
+						begin
+							cliente.estado:= false;
+							seek(a, pos - 1);
+							write(a, cliente);
+							writeln();
+							writeln('Cliente dado de baja');
+						end
+					else
+						begin
+							writeln();
+							writeln('El cliente no fue dado de baja');
+						end;						
+				end
+			else
+				writeln('El cliente ya se encuentra dado de baja');
+		end;
+	close(a);
+	readkey;
+end;
+
 {-----------------Procedimiento que muestra los registros cargados en el archivo-----------------}
 procedure mostrar();
 var
@@ -139,7 +194,7 @@ begin
 		clrscr;
 		case opcion of
 			'1':alta();
-			'2':;//baja();
+			'2':baja();
 			'3':;//modificar();
 			'4':mostrar();
 		end;
