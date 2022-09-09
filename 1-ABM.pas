@@ -102,52 +102,123 @@ var
 	opcion: char;
 begin
 	clrscr;
+	reset(a);
 	write('Ingrese la posicion del cliente que desea dar de baja: ');
 	readln(pos);
-	while (pos <= 0) or (pos > 9999) do 
+	while (pos > filesize(a)) do 
 		begin
 			writeln;
 			TextColor(red);
-			write('Error, reingrese el nunero de cliente: ');
+			write('Error, reingrese la posicion: ');
 			TextColor(15);
 			readln(pos);
 		end;
 	clrscr;	
-	reset(a);
-	if (filesize(a) >= pos) then
+	seek(a, pos - 1);
+	read(a, cliente);
+	if (cliente.estado = true)then
 		begin
-			seek(a, pos - 1);
-			read(a, cliente);
-			if (cliente.estado = true)then
+			write('Borrar a ');
+			write(cliente.apellido);
+			write(' ');
+			write(cliente.nombre);
+			write(' ');
+			write(cliente.numero);
+			write(' ? (S/N)');
+			readln(opcion);
+			if (opcion = 's') or (opcion = 'S') then
 				begin
-					write('Borrar a ');
-					write(cliente.apellido);
-					write(' ');
-					write(cliente.nombre);
-					write(' ');
-					write(cliente.numero);
-					write(' ? (S/N)');
-					readln(opcion);
-					if (opcion = 's') or (opcion = 'S') then
-						begin
-							cliente.estado:= false;
-							seek(a, pos - 1);
-							write(a, cliente);
-							writeln();
-							writeln('Cliente dado de baja');
-						end
-					else
-						begin
-							writeln();
-							writeln('El cliente no fue dado de baja');
-						end;						
+					cliente.estado:= false;
+					seek(a, pos - 1);
+					write(a, cliente);
+					writeln();
+					writeln('Cliente dado de baja');
 				end
 			else
-				writeln('El cliente ya se encuentra dado de baja');
-		end;
+				begin
+					writeln();
+					writeln('El cliente no fue dado de baja');
+				end;						
+		end
+	else
+		writeln('El cliente ya se encuentra dado de baja');
 	close(a);
 	readkey;
 end;
+
+{-----------------Procedimiento que modifica un registro del archivo-----------------}
+procedure modificar();
+var
+	cliente: TipoCliente;
+	pos: integer;
+	opcion: char;
+begin
+	clrscr;
+	reset(a);
+	write('Ingrese la posicion del cliente que desea modificar: ');
+	readln(pos);
+	while (pos > filesize(a)) do 
+		begin
+			writeln;
+			TextColor(red);
+			write('Error, reingrese la posicion: ');
+			TextColor(15);
+			readln(pos);
+		end;
+	clrscr;	
+	seek(a, pos - 1);
+	read(a, cliente);
+	if (cliente.estado = true)then
+		begin
+			write('Modificar a ');
+			write(cliente.apellido);
+			write(' ');
+			write(cliente.nombre);
+			write(' ');
+			write(cliente.numero);
+			write(' ? (S/N)');
+			readln(opcion);
+			if (opcion = 's') or (opcion = 'S') then
+				begin
+					seek(a, pos - 1);
+					{esta parte es igual a la alta}
+					write('Ingrese el apellido: ');
+					readln(cliente.apellido);
+					writeln('');
+					
+					write('Ingrese el nombre: ');
+					readln(cliente.nombre);
+					writeln('');
+					
+					write('Ingrese el numero de cliente: ');
+					readln(cliente.numero);
+					while (cliente.numero <= 0) or (cliente.numero > 9999) do
+						begin
+							TextColor(red);
+							writeln('');
+							writeln('Error, el numero de cliente debe ser mayor a cero y de 4 digitos: ');
+							TextColor(15);
+							readln(cliente.numero);
+						end;
+						
+					cliente.estado:= true;
+					
+					write(a, cliente);
+					writeln();
+					writeln('Cliente modificado');
+				end
+			else
+				begin
+					writeln();
+					writeln('El cliente no fue modificado');
+				end;						
+		end
+	else
+		writeln('El cliente se encuentra dado de baja');
+	close(a);
+	readkey;
+end;
+
 
 {-----------------Procedimiento que muestra los registros cargados en el archivo-----------------}
 procedure mostrar();
@@ -215,7 +286,7 @@ begin
 		case opcion of
 			'1':alta();
 			'2':baja();
-			'3':;//modificar();
+			'3':modificar();
 			'4':mostrar();
 		end;
 	until opcion='0';
