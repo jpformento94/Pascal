@@ -33,11 +33,12 @@ end;
 {-----------------Procedimiento que agrega un registro al archivo-----------------}
 procedure alta();
 var 
-	cliente: TipoCliente;
+	cliente, leer: TipoCliente;
 	pos: integer;
+	hallado: boolean;
 begin
 	clrscr;
-	
+	hallado:= false;
 	TextColor(10);
 	writeln('<=====Alta=====>');
 	writeln('');
@@ -65,9 +66,28 @@ begin
 	cliente.estado:= true;
 	TextColor(15);
 	reset(a);
-	pos:= filesize(a);
-	seek(a,pos);
-	write(a,cliente);
+	
+	{busco dentro del archivo, registros dados de baja para sobreescribir}
+	while not eof(a) and (hallado = false) do
+		begin
+			read(a, leer);
+			if (leer.estado = false) then 
+				begin
+					pos:= FilePos(a) - 1;
+					seek(a, pos);
+					write(a, cliente);
+					hallado:= true;
+				end;
+		end;
+	
+	{si no encuentra ninguno se posiciona al final y lo agrega}
+	if (hallado = false) then
+		begin
+			pos:= filesize(a);
+			seek(a,pos);
+			write(a,cliente);
+		end;
+	
 	close(a);
 	writeln('');
 	writeln('El registro se ha agregado exitosamente. Presione una tecla para volver al menu.');
