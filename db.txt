@@ -3,12 +3,13 @@ apellido                        10
 nombre                          10  
 legajo                          6   
 perez     juan      123456
-formento  juan pablo136813
+Pez       Elio      537634
 latessa   lucas     123456
 latessa   magali    678910
 cherencio guillermo 542351
 romero    juan carlo265235
 quiero    vacaciones100000
-paggi     mateo     546735
-Spinetta  Carlos    543621ayarza    naori     463672
+Spinetta  Carlos    543621
+ayarza    naori     463672
 Naylen    noemi     126262
+Berti     Facundo   624363
