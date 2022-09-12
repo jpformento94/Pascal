@@ -11,10 +11,10 @@ type
 	Proceso = record
 		nombre: string;
 		ts:integer;		//tiempo de servicio
+		ti: integer;	//tiempo de servicio inicial
 		te:integer;		//tiempo de espera
 		tr:integer;		//tiempo de reloj utilizado
-		ti:integer;		//tiempo de inicio
-		tsa:integer;	//tiempo de salida
+		tsa:integer;	//tiempo de salida vuelta en la que termino
 	end;
 
 	//Lista de procesos	
@@ -74,10 +74,19 @@ begin
 					writeln;
 					write('Tiempo de servicio restante: ');write(LP[i].ts);
 					writeln;
+					writeln;
+					write('Tiempo de espera: ');write(LP[i].te);
+					writeln;
+					writeln;
+					write('Tiempo de reloj de salida: ');write(LP[i].tr);
+					writeln;
+					writeln;
+					write('Vuelta de salida: ');write(LP[i].tsa);
+					writeln;
 					writeln('-----------------------------------------------');
+					readkey;
 				end;
 		end;
-	readkey;
 end;
 
 {-----------------Reinicia la lista de procesos-----------------}
@@ -127,15 +136,16 @@ end;
 {-----------------Round Robin-----------------}
 procedure roundRobin();
 var
-	i, vuelta: integer;
+	i, vuelta, reloj: integer;
 begin
-	vuelta:= 0;
+	reloj:= 0;
+	vuelta:= 1;
 	{mientras la suma de los tiempos sea mayor que 0 proceso}
 	while (sumatoriaTS > 0) do
 		begin
 			{recorro la lista de procesos}
 			for i:= MIN to cantidad_procesos do
-				begin
+				begin	
 					{si el tiempo de servicio es mayor a 0, lo proceso}
 					if (LP[i].ts > 0) then
 						begin
@@ -145,23 +155,73 @@ begin
 								begin
 									{le resto el Q al tiempo restante del proceso}
 									LP[i].ts:= LP[i].ts - Q;
+									{le sumo Q al tiempo de reloj}
+									reloj:= reloj + Q;
+									{tiempo de espera}
+									//como se calcula
+									//LP[i].te:= LP[i].te Q;
 								end
 							else
 								{si no es mayor que Q, el proceso termina en esta ronda}
 								begin
+									reloj:= reloj + LP[i].ts;
+									{le sumo el tiempo de servicio restante al tiempo de reloj}
+									LP[i].tr:= reloj;
 									LP[i].ts:= 0;
+									{si pasa por aca es porque termina, entonces me guardo la vuelta en la que
+									* el proceso termino}
+									LP[i].tsa:= vuelta;
 								end;
-						end;
+						end
 				end;
-			inc(vuelta);
-			clrscr;
 			{muestro como estan los procesos al final de cada vuelta}
 			verProcesos();
 			write('Vuelta numero: ');write(vuelta);
+			inc(vuelta);
 			readkey;
 		end;
 end;
 
+{-----------------Procesos precargados-----------------}
+procedure cargarProcesosHardcode();
+var
+	nuevo: Proceso;
+begin
+	nuevo.nombre:= 'A';
+	nuevo.ts:= 10;
+	nuevo.ti:= nuevo.ts;
+	nuevo.te:= 0;
+	nuevo.tr:= 0;
+	nuevo.tsa:= 0;
+	LP[1]:= nuevo;
+
+	nuevo.nombre:= 'B';
+	nuevo.ts:= 12;
+	nuevo.ti:= nuevo.ts;
+	nuevo.te:= 0;
+	nuevo.tr:= 0;
+	nuevo.tsa:= 0;
+	LP[2]:= nuevo;
+	
+	nuevo.nombre:= 'C';
+	nuevo.ts:= 2;
+	nuevo.ti:= nuevo.ts;
+	nuevo.te:= 0;
+	nuevo.tr:= 0;
+	nuevo.tsa:= 0;
+	LP[3]:= nuevo;
+	
+	nuevo.nombre:= 'D';
+	nuevo.ts:= 5;
+	nuevo.ti:= nuevo.ts;
+	nuevo.te:= 0;
+	nuevo.tr:= 0;
+	nuevo.tsa:= 0;
+	LP[4]:= nuevo;
+
+	cantidad_procesos:= 4;
+end;
+	
 
 {-----------------Menu principal-----------------}
 procedure menu();
@@ -205,6 +265,7 @@ end;
 
 BEGIN
 	Q:= 4;
+	cargarProcesosHardcode();
 	menu();
 END.
 
