@@ -1,27 +1,46 @@
+{HECHO EN GRUPO: MAGALI LATESSA, LUCAS LATESSA, JUAN PABLO FORMENTO}
+
 program ABMHash;
 
 uses 
-	crt, SysUtils;
+	crt, SysUtils, StrUtils;
+	
+const
+	HASH_PRIME = 701;	
 	
 type
-	tregistro = record
-		apellido: string[20];
-		nombres: string[20];//nombre
-		cliente: word;//numero
-		estado: boolean;
+	tRegistroColision = record
+		Cliente: longint;
+		Apellido: string[20];
+		Nombres: string[20];
+		Estado: boolean;
 	end;
 
-	TipoArchivo = file of tregistro;
+	arrayColisiones=array[1..10]of tRegistroColision;
+
+	tRegistro = record
+		Cliente: longint;
+		Apellido: string[20];
+		Nombres: string[20];
+		Estado: boolean;
+		CantidadColisiones:integer;
+		ListaDeColisiones:arrayColisiones; //si hay colision lo ubica en la listaDeColisiones de esa posicion
+	end;
+	
+	tArchivo = file of tRegistro;
 	
 var 
-	archivo: TipoArchivo;
-	reg: tregistro;
+	archivo: tArchivo;
+	reg:tregistro;
+	i: integer;
 
-function hash(cliente:integer):integer;
+{-----------------Funcion Hash-----------------}
+function hash(cliente:longint):integer;
 begin
-	hash:= cliente mod 691;
+	hash:= cliente mod HASH_PRIME;
 end;
 
+{-----------------Funcion que lee un registro del archivo-----------------}
 function leer(x:integer):tregistro;
 var
 	registro:tregistro;
@@ -29,213 +48,243 @@ begin
 	reset(Archivo);
 	seek(Archivo,x);
 	read(Archivo,registro);
-	leer:=registro;
 	close(Archivo);
-end;
-function recuperar(cliente:integer):tregistro;
-var
-	reg2:tregistro;
-begin
-	reg2:=leer(hash(cliente));
-	writeln(reg2.estado,reg2.nombres,reg2.apellido, reg2.cliente);
-	if (reg2.estado) and (reg2.cliente <> cliente) then begin
-		reset(Archivo);
-		if reg2.cliente <> cliente then begin
-			seek(Archivo,692);
-			while (not eof(archivo)) and (cliente <> reg2.cliente) do begin
-				read(archivo,reg2);
-			end;
-		end;
-
-		if cliente = reg2.cliente then
-			recuperar:= reg2
-		else
-			recuperar.estado:=false;
-	close(archivo);
-	end else begin
-		recuperar:=reg2;
-	end;
+	leer:=registro;
 end;
 
-procedure Alta;
+{-----------------Alta-----------------}
+procedure Alta();
 var reg: tRegistro;
+	regAux:tRegistroColision;
+	numeroCliente:string;
 begin
-	write('Ingrese el apellido: ');
-	readln(reg.Apellido);
-	write('Ingrese el nombre: ');
-	readln(reg.Nombres);
 	write('Ingrese el nro. de cliente: ');
-	read(reg.Cliente);
-	while (reg.Cliente<=0) or (reg.Cliente>9999) or recuperar(reg.cliente).estado do begin
-		write('Error. Reingrese el nro. de cliente: ');
-		read(reg.Cliente);
-	end;
-	reg.Estado:= true;
-	if leer(hash(reg.cliente)).estado then begin
+	readln(numeroCliente);
+	if not(leer(hash(strtoint(numeroCliente))).estado) then  //Si no estaba antes..
+	begin  
 		reset(archivo);
-		seek(archivo,filesize(archivo));
-	end else begin
+		write('Ingrese el apellido: ');
+		readln(reg.Apellido);
+		write('Ingrese el nombre: ');
+		readln(reg.Nombres);
+		reg.estado:=true;
+		reg.cliente:=strtoint(numeroCliente);
+		reg.CantidadColisiones:=0;
+		
+	end 
+	else 
+	begin //Si ya esta ocupado...
 		reset(archivo);
-		seek(archivo,hash(reg.cliente));
-	end;
+		seek(archivo,hash(strtoint(numeroCliente)));
+		read(archivo,reg);
+		reg.CantidadColisiones+=1;
+		write('Ingrese el apellido: ');
+		readln(regAux.Apellido);
+		write('Ingrese el nombre: ');
+		readln(regAux.Nombres);
+		regAux.cliente:=strtoint(numeroCliente);
+		regAux.estado:=true;
+		reg.listaDeColisiones[reg.CantidadColisiones]:=regAux;
+		end;
+	seek(archivo,hash(reg.cliente));
 	write(archivo,reg);
 	close(archivo);
 	writeln('El registro se ha agregado exitosamente. Presione una tecla para volver al menu.');
 	readkey;
 end;
 
-procedure Mostrar;
+{-----------------Baja-----------------}
+procedure Baja();
 var reg: tRegistro;
-	vacio: boolean;
+	cliente: string;
 begin
-	clrscr;
-	gotoxy(36,1);
-	writeln('REGISTROS:');
-	writeln;
-	vacio:= true;
 	reset(archivo);
-	while not eof(archivo) do begin
-		read(archivo,reg);
-		if reg.Estado then begin
-			if vacio then begin
-				writeln('APELLIDO              NOMBRES               NRO. CLIENTE');
-				writeln;
-				vacio:= false;
-			end;
-			writeln(reg.Apellido+' '+reg.Nombres+' '+IntToStr(reg.Cliente)+' '+inttostr(FilePos(archivo)));
-		end;
-	end;
-	close(archivo);
-	if vacio then writeln('El archivo no posee ningun registro.')
-	else writeln;
-	writeln('Presione una tecla para volver al menu.');
-	readkey;
-end;
-
-procedure Baja;
-var reg: tRegistro;
-	cliente: word;
-	encontre: boolean;
-begin
 	clrscr;
 	gotoxy(38,1);
 	writeln('BAJAS:');
 	writeln;
 	write('Ingrese el nro. de cliente que desea dar de baja (0 para volver al menu): ');
 	readln(cliente);
-	while cliente>9999 do begin
-		write('Error. Reingrese el nro. de cliente: ');
-		readln(cliente);
-	end;
-	if cliente<>0 then
-                reset(archivo);
-	while cliente<>0 do
-              begin
-		encontre:= false;
-		seek(archivo,0);
-		while (not eof(archivo)) and (not encontre) do begin
-			read(archivo,reg);
-			if reg.Estado then encontre:= cliente=reg.Cliente;
-		end;
-		if encontre then begin
-			writeln('APELLIDO              NOMBRES               NRO. CLIENTE');
-			writeln;
-			writeln(reg.Apellido+'          '+reg.Nombres+'          '+IntToStr(reg.Cliente));
-			writeln;
-			writeln('Presione una tecla para dar de baja el registro.');
-			readkey;
-			reg.Estado:= false;
-			seek(archivo,filepos(archivo)-1);
-			write(archivo,reg);
-		end else begin
-			writeln('No existe ningun registro con el nro. de cliente ingresado.');
-			writeln('Presione una tecla para continuar.');
-			readkey;
-		end;
-		clrscr;
-		gotoxy(38,1);
-		writeln('BAJAS:');
-		writeln;
-		write('Ingrese el nro. de cliente que desea dar de baja (0 para volver al menu): ');
-		readln(cliente);
-		while cliente>9999 do begin
-			write('Error. Reingrese el nro. de cliente: ');
-			readln(cliente);
+	if (strtoint(cliente)<>0) then begin
+		seek(archivo,hash(strtoint(cliente)));
+		read(archivo,reg);
+		if reg.Estado then begin
+			if reg.cliente=strtoint(cliente) then begin 
+				seek(archivo,hash(strtoint(cliente)));
+				reg.estado:=false;
+				write(archivo,reg);
+				writeln ('El registro fue dado de baja');
+			end else 
+				if reg.CantidadColisiones<>0 then begin 
+					i:=reg.CantidadColisiones;
+					while i<>0 do begin
+						if reg.listaDeColisiones[i].cliente=strtoint(cliente) then begin 
+							reg.listaDeColisiones[i].estado:=false;
+							seek(archivo,hash(strtoint(cliente)));
+							write(archivo,reg);
+							writeln ('El registro fue dado de baja');
+						end;
+					end;
+				end else writeln('El numero del cliente no existe');
 		end;
 	end;
 	close(archivo);
 end;
 
-procedure Modificar;
-var
-   reg: tRegistro;
-   cliente: word;
-   encontre: boolean;
-   opcion: char;
+{-----------------Modificar carga-----------------}
+function ModificarCarga():tRegistro;
+var reg:tregistro;
 begin
-        clrscr;
-       encontre:= false;
+	writeln('Ingrese los nuevos datos');
+	write('Ingrese el apellido: ');
+	readln(reg.Apellido);
+	write('Ingrese el nombre: ');
+	readln(reg.Nombres);
+	ModificarCarga:=reg;
+end;
+
+{-----------------Modificar carga con colision-----------------}
+function ModificarCargaColision():tRegistroColision;
+var regAux:tRegistroColision; 
+begin
+	writeln('Ingrese los nuevos datos');
+	write('Ingrese el apellido: ');
+	readln(regAux.Apellido);
+	write('Ingrese el nombre: ');
+	readln(regAux.Nombres);
+	ModificarCargaColision:=regAux;
+end;
+
+{-----------------Modificar-----------------}
+procedure Modificar();
+var
+	reg: tRegistro;
+	cliente: string;
+	encontre: boolean;
+	opcion: string;
+	i:integer;
+	encontrado:boolean; 
+	procedure modificar2();
+	begin
+		opcion:='N';
+		cliente:='100';
+		encontre:=false;
+		while ((opcion='N') and (cliente<>'-1'))  do begin
+			reset(archivo);
+			write('Ingrese el nro. de cliente que desea modificar (-1 para volver al menu): ');
+			readln(cliente);
+			if cliente<>'-1' then begin
+				seek(archivo,hash(strtoint(cliente)));
+				read(archivo,reg);
+				writeln('APELLIDO              NOMBRES               NRO. CLIENTE');
+				writeln;
+
+			if (reg.cliente=strtoint(cliente)) then begin
+					writeln(reg.Apellido+'          '+reg.Nombres+'          '+IntToStr(reg.Cliente));
+					writeln;
+					writeln('Este es el registro que desea modificar? S/N.');
+					readln(opcion);
+				end else if reg.CantidadColisiones<>0 then begin
+							i:=reg.CantidadColisiones;
+							while (i<>0) and not(encontre) do begin 
+								if reg.listaDeColisiones[i].cliente=strtoint(cliente) then begin 
+									encontre:=true;
+									writeln(reg.listaDeColisiones[i].Apellido+'          '+reg.listaDeColisiones[i].Nombres+'          '+IntToStr(reg.listaDeColisiones[i].Cliente));
+									writeln;	
+									writeln('Este es el registro que desea modificar? S/N.');
+									readln(opcion);
+								end;
+							end;
+						end;
+			end;
+		end;
+		close(archivo);
+	end;
+begin
+    clrscr;
+	i:=0;
 	gotoxy(38,1);
 	writeln('MODIFICAR:');
 	writeln;
-	write('Ingrese el nro. de cliente que desea dar de baja (0 para volver al menu): ');
-	readln(cliente);
-	while cliente>9999 do begin
-		write('Error. Reingrese el nro. de cliente: ');
-		readln(cliente);
+	modificar2();
+	reset(archivo);
+	encontrado:=false;
+	if (reg.cliente=strtoint(cliente)) then begin 
+			reg:=ModificarCarga();
+			reg.cliente:=strtoint(cliente);
+			seek(archivo,hash(strtoint(cliente)));
+			write(archivo,reg);
+			encontrado:=true;
+		end else begin
+				if reg.listaDeColisiones[i].cliente=strtoint(cliente) then begin 
+					seek(archivo,hash(strtoint(cliente)));
+					reg.listaDeColisiones[i]:=ModificarCargaColision();
+					reg.listaDeColisiones[i].cliente:=strtoint(cliente);
+					write(archivo,reg);	
+					encontrado:=true;
+				end;
+			end;
+	if encontrado then begin 
+			writeln('El registro se ha modificado exitosamente. Presione una tecla para volver al menu.');
+			readkey;
+	end else if cliente<>'-1' then begin
+			writeln('No existe ningun registro con el nro. de cliente ingresado.');
+			writeln('Presione una tecla para continuar.');
+			readkey;
+		end;
+	close(archivo);
+end;
+
+{-----------------Ver archivo-----------------}
+procedure Mostrar;
+var reg: tRegistro;
+	vacio: boolean;
+	i:integer;
+begin
+	clrscr;
+	gotoxy(13,1);
+	TextColor(10);             
+	writeln('--------REGISTROS---------');
+	writeln;
+	reset(archivo);
+	writeln('|'+PadRight('Apellido', 			        20) + '| |'+
+					PadRight('Nombres',                   20) + '| |'+
+					'Cliente'								  +'|');
+	TextColor(15);
+	writeln('________________________________________________________________');
+	while not eof(archivo) do begin
+		read(archivo,reg);
+		if reg.Estado then begin
+			vacio:=false;
+			writeln('|'+PadRight(reg.Apellido, 			        20) + '| |'+
+					PadRight(reg.Nombres,                   20) + '| | '+
+					PadRight(IntToStr(reg.Cliente),          4)+'  |');
+		end;
 	end;
-	if cliente<>0 then
-                reset(archivo);
-              begin
-
-		seek(archivo,0);
-		while (not eof(archivo)) and (not encontre) do
-
-                      begin
-			read(archivo,reg);
-			if reg.Estado then encontre:= cliente=reg.Cliente;
-		      end;
-               if encontre then
-                    begin
-
-			writeln('APELLIDO              NOMBRES               NRO. CLIENTE');
-			writeln;
-			writeln(reg.Apellido+'          '+reg.Nombres+'          '+IntToStr(reg.Cliente));
-			writeln;
-			writeln('¿Este es el registro que desea modificar? S/N.');
-                        readln(opcion);
-                                       if ((opcion = 'S') or (opcion = 's')) then
-                                            begin
-                                                writeln('Ingrese los nuevos datos');
-                                                write('Ingrese el apellido: ');
-                                                readln(reg.Apellido);
-	                                        write('Ingrese el nombre: ');
-                                                readln(reg.Nombres);
-
-                                            end;
-
-                    end
-               else
-                       begin
-	                      writeln('No existe ningun registro con el nro. de cliente ingresado.');
-	                      writeln('Presione una tecla para continuar.');
-	                      readkey;
-                       end;
-
-              end;
-
-                         if encontre then
-                            begin
-		                 reset(archivo);
-	                         seek(archivo,(reg.cliente));
-	                         write(archivo,reg);
-	                         close(archivo);
-	                         writeln('El registro se ha modificado exitosamente. Presione una tecla para volver al menu.');
-	                         readkey;
-
-                            end;
-
-
+	close(archivo);
+	reset(archivo);
+	TextColor(10); 
+	writeln('             --------COLISIONES--------');
+	TextColor(15);
+	while not eof(archivo) do begin
+		read(archivo,reg);
+		if (reg.CantidadColisiones<>0) and (reg.Estado) then //Mostrar colisiones
+		begin 
+			i:=reg.CantidadColisiones;
+			while i<>0 do begin
+				writeln('|'+PadRight(reg.listaDeColisiones[i].Apellido, 			        20) + '| |'+ 
+					PadRight(reg.listaDeColisiones[i].Nombres,                   20) + '| | '+
+					PadRight(IntToStr(reg.listaDeColisiones[i].Cliente),          4)+'  |');			
+					dec(i);
+			end;
+		end;
+	end;
+	close(archivo);
+	if vacio then writeln('El archivo no posee ningun registro.')
+	else writeln;
+	textcolor(45);
+	writeln('Presione una tecla para volver al menu.');
+	readkey;
 end;
 
 {-----------------Menu principal-----------------}
@@ -250,7 +299,7 @@ begin
 		textcolor(15);
 		gotoxy(2,3);writeln('1- Alta');
 		gotoxy(2,5);writeln('2- Baja');
-		gotoxy(2,7);writeln('3- Modificacion');
+		gotoxy(2,7);writeln('3- Modificar');
 		gotoxy(2,9);writeln('4- Ver archivo');
 		textcolor(12);
 		gotoxy(2,11);writeln('0- Salir');
@@ -275,6 +324,16 @@ BEGIN
 	if not (fileexists('datosHash.dat')) then 
 		begin
 			rewrite(archivo);
+			i := 0;		
+			reg.Cliente := 0;
+			reg.Apellido := '';
+			reg.Nombres := '';
+			reg.Estado := false;
+			reg.CantidadColisiones:=0;		
+			while (i < HASH_PRIME) do begin
+				write(archivo,reg);	
+				inc(i);
+			end;	
 			close(archivo);
 		end;
 	menu();
