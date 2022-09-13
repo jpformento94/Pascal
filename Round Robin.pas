@@ -157,9 +157,6 @@ begin
 									LP[i].ts:= LP[i].ts - Q;
 									{le sumo Q al tiempo de reloj}
 									reloj:= reloj + Q;
-									{tiempo de espera}
-									//como se calcula
-									//LP[i].te:= LP[i].te Q;
 								end
 							else
 								{si no es mayor que Q, el proceso termina en esta ronda}
@@ -171,6 +168,8 @@ begin
 									{si pasa por aca es porque termina, entonces me guardo la vuelta en la que
 									* el proceso termino}
 									LP[i].tsa:= vuelta;
+									{tiempo de espera}
+									LP[i].te:= LP[i].tr - LP[i].ti;
 								end;
 						end
 				end;
