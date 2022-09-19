@@ -1,3 +1,6 @@
+{permite que el usuario defina la estructura del archivo, cantidad y nombre de campos
+* luego puede cargar datos y leerlos con el formato que definio previamente}
+
 program BaseDeDatos;
 
 uses
